@@ -4,6 +4,10 @@ Provides support for real-time output of k6 test metrics to a [StatsD](https://g
 Direct support for the _StatsD_ metrics collector will be removed from k6 in a future release.
 For those seeking to continue using StatsD, the functionality may be compiled into custom k6 binaries as an [xk6 extension](https://k6.io/docs/extensions/).
 
+## Fork Notes 
+
+This fork adds [support](https://github.com/svsool/xk6-output-statsd/pull/1) for k6 checks as tags in StatsD.
+
 ## Build
 
 To build a `k6` binary with this extension, first ensure you have the prerequisites:
@@ -15,7 +19,7 @@ To build a `k6` binary with this extension, first ensure you have the prerequisi
 1. Build with `xk6`:
 
 ```bash
-xk6 build --with github.com/LeonAdato/xk6-output-statsd
+xk6 build --with github.com/svsool/xk6-output-statsd
 ```
 
 This will result in a `k6` binary in the current directory.
