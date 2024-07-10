@@ -88,6 +88,8 @@ func baseTest(t *testing.T,
 	myCheck, err := registry.NewMetric("my_check", metrics.Rate)
 	require.NoError(t, err)
 
+	statsdTagsEnabled := collector.config.EnableTags.Bool
+
 	testMatrix := []struct {
 		input  []metrics.SampleContainer
 		output string
@@ -141,7 +143,13 @@ func baseTest(t *testing.T,
 					"check": "max>100",
 				}),
 			},
-			output: "testing.things.check.max<100.pass:1|c\ntesting.things.check.max>100.fail:1|c",
+			output: func() string {
+				if statsdTagsEnabled {
+					return "testing.things.my_check:1|c\ntesting.things.my_check:1|c"
+				} else {
+					return "testing.things.check.max<100.pass:1|c\ntesting.things.check.max>100.fail:1|c"
+				}
+			}(),
 		},
 	}
 	for _, test := range testMatrix {

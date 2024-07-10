@@ -47,7 +47,7 @@ type Output struct {
 func (o *Output) dispatch(entry metrics.Sample) error {
 	var tagList []string
 	if o.config.EnableTags.Bool {
-		tagList = processTags(o.config.TagBlocklist, entry.Tags.Map())
+		tagList = processTags(o.config.TagBlocklist, maybeAddStatusTag(o, entry))
 	}
 
 	switch entry.Metric.Type {
@@ -59,17 +59,47 @@ func (o *Output) dispatch(entry metrics.Sample) error {
 		return o.client.Gauge(entry.Metric.Name, entry.Value, tagList, 1)
 	case metrics.Rate:
 		if check, ok := entry.Tags.Get("check"); ok {
-			return o.client.Count(
-				checkToString(check, entry.Value),
-				1,
-				tagList,
-				1,
-			)
+			if o.config.EnableTags.Bool {
+				return o.client.Count(
+					entry.Metric.Name,
+					1,
+					tagList,
+					1,
+				)
+			} else {
+				return o.client.Count(
+					checkToString(check, entry.Value),
+					1,
+					tagList,
+					1,
+				)
+			}
 		}
 		return o.client.Count(entry.Metric.Name, int64(entry.Value), tagList, 1)
 	default:
 		return fmt.Errorf("unsupported metric type %s", entry.Metric.Type)
 	}
+}
+
+func maybeAddStatusTag(o *Output, entry metrics.Sample) map[string]string {
+	_, statusOk := entry.Tags.Get("check_status")
+	_, checkOk := entry.Tags.Get("check")
+
+	if checkOk && !statusOk {
+		tagsMap := entry.Tags.Map()
+
+		checkStatus := "pass"
+
+		if entry.Value == 0 {
+			checkStatus = "fail"
+		}
+
+		tagsMap["check_status"] = checkStatus
+
+		return tagsMap
+	}
+
+	return entry.Tags.Map()
 }
 
 func checkToString(check string, value float64) string {

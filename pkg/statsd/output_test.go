@@ -55,7 +55,7 @@ func TestStatsdEnabledTags(t *testing.T) {
 			"namespace": "%s",
 			"bufferSize": %d,
 			"pushInterval": "%s",
-			"tagBlocklist": ["tag1", "tag2"],
+			"tagBlocklist": ["tag1", "tag2", "check_status"],
 			"enableTags": true
 		}`, addr.String, namespace.String, bufferSize.Int64, pushInterval.Duration.String())),
 			})
