@@ -88,9 +88,9 @@ func TestSanitizeTagValue(t *testing.T) {
 		expected string
 	}{
 		{"value,with:allowed:chars", "value_with_allowed_chars"},
-		{"value with spaces", "value with spaces"},
-		{"value/with/slashes", "value/with/slashes"},
-		{"value@name#with!special&chars", "value@name_with!special&chars"},
+		{"value with spaces", "value_with_spaces"},
+		{"value/with/slashes", "value_with_slashes"},
+		{"value@name#with!special&chars", "value_name_with_special_chars"},
 	}
 
 	for _, test := range testCases {

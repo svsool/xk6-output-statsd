@@ -14,7 +14,7 @@ import (
 )
 
 var invalidTagNameCharsRegexp = regexp.MustCompile(`[^a-zA-Z0-9_\-\.]`)
-var invalidTagValueCharsRegexp = regexp.MustCompile(`[,:#]`)
+var validTagValueCharsRegexp = regexp.MustCompile(`[^a-zA-Z0-9_-]+`)
 var spaceCharsRegexp = regexp.MustCompile(`\s+`)
 
 // config defines the StatsD configuration.
@@ -36,7 +36,10 @@ func sanitizeTagName(input string) string {
 }
 
 func sanitizeTagValue(input string) string {
-	return invalidTagValueCharsRegexp.ReplaceAllString(input, "_")
+	tagValue := validTagValueCharsRegexp.ReplaceAllString(input, "_")
+	tagValue = strings.TrimSpace(tagValue)
+
+	return tagValue
 }
 
 func processTags(t metrics.EnabledTags, tags map[string]string) []string {
