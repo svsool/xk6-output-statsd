@@ -8,6 +8,8 @@ For those seeking to continue using StatsD, the functionality may be compiled in
 
 This fork adds [support](https://github.com/svsool/xk6-output-statsd/pull/1) for k6 checks as tags in StatsD.
 
+Tag name and value sanitization were also added. 
+
 ## Build
 
 To build a `k6` binary with this extension, first ensure you have the prerequisites:
