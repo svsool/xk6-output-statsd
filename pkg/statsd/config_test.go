@@ -65,3 +65,35 @@ func TestConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestSanitizeTagName(t *testing.T) {
+	testCases := []struct {
+		input    string
+		expected string
+	}{
+		{"tag name/with spaces", "tag_name-with_spaces"},
+		{"tag/name/with/slashes", "tag-name-with-slashes"},
+		{"tag@name#with!special&chars", "tagnamewithspecialchars"},
+		{"tag name with multiple spaces", "tag_name_with_multiple_spaces"},
+	}
+
+	for _, test := range testCases {
+		require.Equal(t, test.expected, sanitizeTagName(test.input))
+	}
+}
+
+func TestSanitizeTagValue(t *testing.T) {
+	testCases := []struct {
+		input    string
+		expected string
+	}{
+		{"value,with:allowed:chars", "value_with_allowed_chars"},
+		{"value with spaces", "value with spaces"},
+		{"value/with/slashes", "value/with/slashes"},
+		{"value@name#with!special&chars", "value@name_with!special&chars"},
+	}
+
+	for _, test := range testCases {
+		require.Equal(t, test.expected, sanitizeTagValue(test.input))
+	}
+}

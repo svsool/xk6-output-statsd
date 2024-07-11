@@ -2,6 +2,8 @@ package statsd
 
 import (
 	"encoding/json"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/mstoykov/envconfig"
@@ -10,6 +12,10 @@ import (
 	"go.k6.io/k6/lib/types"
 	"go.k6.io/k6/metrics"
 )
+
+var invalidTagNameCharsRegexp = regexp.MustCompile(`[^a-zA-Z0-9_\-\.]`)
+var invalidTagValueCharsRegexp = regexp.MustCompile(`[,:#]`)
+var spaceCharsRegexp = regexp.MustCompile(`\s+`)
 
 // config defines the StatsD configuration.
 type config struct {
@@ -21,11 +27,23 @@ type config struct {
 	EnableTags   null.Bool           `json:"enableTags,omitempty" envconfig:"K6_STATSD_ENABLE_TAGS"`
 }
 
+func sanitizeTagName(input string) string {
+	tagName := spaceCharsRegexp.ReplaceAllString(input, "_")
+	tagName = strings.ReplaceAll(tagName, "/", "-")
+	tagName = invalidTagNameCharsRegexp.ReplaceAllString(tagName, "")
+
+	return tagName
+}
+
+func sanitizeTagValue(input string) string {
+	return invalidTagValueCharsRegexp.ReplaceAllString(input, "_")
+}
+
 func processTags(t metrics.EnabledTags, tags map[string]string) []string {
 	var res []string
 	for key, value := range tags {
 		if value != "" && !t[key] {
-			res = append(res, key+":"+value)
+			res = append(res, sanitizeTagName(key)+":"+sanitizeTagValue(value))
 		}
 	}
 	return res
