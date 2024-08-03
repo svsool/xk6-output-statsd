@@ -47,7 +47,7 @@ type Output struct {
 func (o *Output) dispatch(entry metrics.Sample) error {
 	var tagList []string
 	if o.config.EnableTags.Bool {
-		tagList = processTags(o.config.TagBlocklist, maybeAddStatusTag(o, entry))
+		tagList = processTags(o.config.TagBlocklist, prepareTags(o, entry))
 	}
 
 	switch entry.Metric.Type {
@@ -58,6 +58,7 @@ func (o *Output) dispatch(entry metrics.Sample) error {
 	case metrics.Gauge:
 		return o.client.Gauge(entry.Metric.Name, entry.Value, tagList, 1)
 	case metrics.Rate:
+    // Add check tag as is when tags are enabled
 		if check, ok := entry.Tags.Get("check"); ok {
 			if o.config.EnableTags.Bool {
 				return o.client.Count(
@@ -81,14 +82,21 @@ func (o *Output) dispatch(entry metrics.Sample) error {
 	}
 }
 
-func maybeAddStatusTag(o *Output, entry metrics.Sample) map[string]string {
+func prepareTags(o *Output, entry metrics.Sample) map[string]string {
 	tagsMap := entry.Tags.Map()
+
 	_, checkOk := tagsMap["check"]
 	_, checkStatusOk := tagsMap["check_status"]
 
-	if checkOk && !checkStatusOk {
-		tagsMap := entry.Tags.Map()
+  // 	Add system tags https://grafana.com/docs/k6/latest/using-k6/tags-and-groups/#system-tags
+	for key, val := range entry.Metadata {
+  	if key == "iter" || key == "vu" || key == "ip" {
+      tagsMap[key] = val
+    }
+  }
 
+  // Add check_status tag
+	if checkOk && !checkStatusOk {
 		checkStatus := "pass"
 
 		if entry.Value == 0 {
@@ -100,7 +108,7 @@ func maybeAddStatusTag(o *Output, entry metrics.Sample) map[string]string {
 		return tagsMap
 	}
 
-	return entry.Tags.Map()
+	return tagsMap
 }
 
 func checkToString(check string, value float64) string {
